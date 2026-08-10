@@ -3,103 +3,246 @@
 
 @import "tailwindcss" source(none);
 @import "phoenix-colocated/sid/colocated.css";
+
 @source "../css";
 @source "../js";
 @source "../../lib/sid_web";
-/* Required for Tailwind to automatically pick up changes in colocated CSS files in dev */
+
+/* Required for Tailwind to automatically pick up changes in colocated CSS files in dev. */
 @source "../../_build/dev/phoenix-colocated/sid/*/";
 
-/* A Tailwind plugin that makes "hero-#{ICON}" classes available.
-   The heroicons installation itself is managed by your mix.exs */
+
+/*
+ * Heroicons
+ *
+ * Makes classes such as "hero-book-open" available to the application.
+ * The Heroicons installation itself is managed through mix.exs.
+ */
 @plugin "../vendor/heroicons";
 
-/* daisyUI Tailwind Plugin. */
+
+/*
+ * daisyUI
+ *
+ * Built-in themes are disabled because SID defines its own branded
+ * light and dark variants below.
+ */
 @plugin "daisyui/packages/bundle/daisyui" {
   themes: false;
 }
 
-/* daisyUI theme plugin.
-  We ship with two themes, a light one inspired on Phoenix colors and a dark one inspired
-  on Elixir colors. Build your own at: https://daisyui.com/theme-generator/ */
-@plugin "daisyui/packages/bundle/daisyui-theme" {
-  name: "dark";
-  default: false;
-  prefersdark: true;
-  color-scheme: "dark";
-  --color-base-100: oklch(30.33% 0.016 252.42);
-  --color-base-200: oklch(25.26% 0.014 253.1);
-  --color-base-300: oklch(20.15% 0.012 254.09);
-  --color-base-content: oklch(97.807% 0.029 256.847);
-  --color-primary: oklch(58% 0.233 277.117);
-  --color-primary-content: oklch(96% 0.018 272.314);
-  --color-secondary: oklch(58% 0.233 277.117);
-  --color-secondary-content: oklch(96% 0.018 272.314);
-  --color-accent: oklch(60% 0.25 292.717);
-  --color-accent-content: oklch(96% 0.016 293.756);
-  --color-neutral: oklch(37% 0.044 257.287);
-  --color-neutral-content: oklch(98% 0.003 247.858);
-  --color-info: oklch(58% 0.158 241.966);
-  --color-info-content: oklch(97% 0.013 236.62);
-  --color-success: oklch(60% 0.118 184.704);
-  --color-success-content: oklch(98% 0.014 180.72);
-  --color-warning: oklch(66% 0.179 58.318);
-  --color-warning-content: oklch(98% 0.022 95.277);
-  --color-error: oklch(58% 0.253 17.585);
-  --color-error-content: oklch(96% 0.015 12.422);
-  --radius-selector: 0.25rem;
-  --radius-field: 0.25rem;
-  --radius-box: 0.5rem;
-  --size-selector: 0.21875rem;
-  --size-field: 0.21875rem;
-  --border: 1.5px;
-  --depth: 1;
-  --noise: 0;
-}
 
+/*
+ * ---------------------------------------------------------------------------
+ * SID LIGHT THEME
+ * ---------------------------------------------------------------------------
+ *
+ * The brand palette is derived from the SID logo:
+ *
+ *   Navy:  #10293E
+ *   Blue:  #0263BC
+ *   Azure: #0383BB
+ *   Cyan:  #03A0B1
+ *   Teal:  #03B9A3
+ *
+ * The theme deliberately keeps semantic state colors such as success,
+ * warning, and error separate from the brand palette. These colors carry
+ * application meaning and should therefore remain visually distinct.
+ *
+ * The theme keeps the name "light" because Phoenix's generated theme
+ * selector expects the themes "light" and "dark".
+ */
 @plugin "daisyui/packages/bundle/daisyui-theme" {
   name: "light";
   default: true;
   prefersdark: false;
   color-scheme: "light";
-  --color-base-100: oklch(98% 0 0);
-  --color-base-200: oklch(96% 0.001 286.375);
-  --color-base-300: oklch(92% 0.004 286.32);
-  --color-base-content: oklch(21% 0.006 285.885);
-  --color-primary: oklch(70% 0.213 47.604);
-  --color-primary-content: oklch(98% 0.016 73.684);
-  --color-secondary: oklch(55% 0.027 264.364);
-  --color-secondary-content: oklch(98% 0.002 247.839);
-  --color-accent: oklch(0% 0 0);
-  --color-accent-content: oklch(100% 0 0);
-  --color-neutral: oklch(44% 0.017 285.786);
-  --color-neutral-content: oklch(98% 0 0);
-  --color-info: oklch(62% 0.214 259.815);
-  --color-info-content: oklch(97% 0.014 254.604);
-  --color-success: oklch(70% 0.14 182.503);
-  --color-success-content: oklch(98% 0.014 180.72);
-  --color-warning: oklch(66% 0.179 58.318);
-  --color-warning-content: oklch(98% 0.022 95.277);
-  --color-error: oklch(58% 0.253 17.585);
-  --color-error-content: oklch(96% 0.015 12.422);
-  --radius-selector: 0.25rem;
-  --radius-field: 0.25rem;
-  --radius-box: 0.5rem;
-  --size-selector: 0.21875rem;
-  --size-field: 0.21875rem;
-  --border: 1.5px;
+
+  /* Main surfaces */
+  --color-base-100: #ffffff;
+  --color-base-200: #f7fafb;
+  --color-base-300: #e8f1f4;
+
+  /* Main text color */
+  --color-base-content: #10293e;
+
+  /* SID Blue — primary actions */
+  --color-primary: #0263bc;
+  --color-primary-content: #ffffff;
+
+  /* SID Cyan — secondary actions and highlights */
+  --color-secondary: #03a0b1;
+  --color-secondary-content: #ffffff;
+
+  /* SID Teal — accent elements */
+  --color-accent: #03b9a3;
+  --color-accent-content: #10293e;
+
+  /* SID Navy — strong neutral elements */
+  --color-neutral: #10293e;
+  --color-neutral-content: #ffffff;
+
+  /* Informational state */
+  --color-info: #0383bb;
+  --color-info-content: #ffffff;
+
+  /*
+   * Semantic state colors.
+   * These intentionally do not simply reuse brand colors.
+   */
+  --color-success: #16855b;
+  --color-success-content: #ffffff;
+
+  --color-warning: #b7791f;
+  --color-warning-content: #ffffff;
+
+  --color-error: #c24141;
+  --color-error-content: #ffffff;
+
+  /* Component geometry */
+  --radius-selector: 0.5rem;
+  --radius-field: 0.5rem;
+  --radius-box: 0.75rem;
+
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+
+  --border: 1px;
   --depth: 1;
   --noise: 0;
 }
 
-/* Add variants based on LiveView classes */
+
+/*
+ * ---------------------------------------------------------------------------
+ * SID DARK THEME
+ * ---------------------------------------------------------------------------
+ *
+ * The dark theme retains SID's blue/cyan/teal identity while using
+ * deep navy surfaces derived from the logo text color.
+ */
+@plugin "daisyui/packages/bundle/daisyui-theme" {
+  name: "dark";
+  default: false;
+  prefersdark: true;
+  color-scheme: "dark";
+
+  /* Dark SID surfaces */
+  --color-base-100: #10293e;
+  --color-base-200: #0c2234;
+  --color-base-300: #081a29;
+
+  /* High-contrast content */
+  --color-base-content: #edf7fa;
+
+  /*
+   * The brighter portions of the logo palette are used for interactive
+   * controls so that they remain visible against dark surfaces.
+   */
+  --color-primary: #1687d8;
+  --color-primary-content: #ffffff;
+
+  --color-secondary: #13afbd;
+  --color-secondary-content: #071c2b;
+
+  --color-accent: #16c9ac;
+  --color-accent-content: #071c2b;
+
+  /* Neutral UI elements */
+  --color-neutral: #243f54;
+  --color-neutral-content: #f4fafc;
+
+  /* Semantic states */
+  --color-info: #2b9ad5;
+  --color-info-content: #ffffff;
+
+  --color-success: #38a978;
+  --color-success-content: #071c1a;
+
+  --color-warning: #d89b3a;
+  --color-warning-content: #231706;
+
+  --color-error: #dd6262;
+  --color-error-content: #ffffff;
+
+  /* Component geometry */
+  --radius-selector: 0.5rem;
+  --radius-field: 0.5rem;
+  --radius-box: 0.75rem;
+
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+
+  --border: 1px;
+  --depth: 1;
+  --noise: 0;
+}
+
+
+/*
+ * ---------------------------------------------------------------------------
+ * SID BRAND UTILITIES
+ * ---------------------------------------------------------------------------
+ *
+ * The gradient mirrors the principal color transition in the SID logo.
+ * It should be used sparingly for branding elements rather than as a
+ * general-purpose component background.
+ */
+.sid-brand-gradient {
+  background: linear-gradient(
+    90deg,
+    #03b9a3 0%,
+    #03a0b1 50%,
+    #0263bc 100%
+  );
+}
+
+
+/*
+ * Gradient text can be useful for small branding elements.
+ *
+ * Example:
+ *
+ *   <span class="sid-brand-gradient-text">SID</span>
+ */
+.sid-brand-gradient-text {
+  background: linear-gradient(
+    90deg,
+    #03b9a3 0%,
+    #03a0b1 50%,
+    #0263bc 100%
+  );
+
+  background-clip: text;
+  -webkit-background-clip: text;
+
+  color: transparent;
+}
+
+
+/*
+ * ---------------------------------------------------------------------------
+ * PHOENIX LIVEVIEW
+ * ---------------------------------------------------------------------------
+ */
+
+/* Add variants based on LiveView loading-state classes. */
 @custom-variant phx-click-loading (.phx-click-loading&, .phx-click-loading &);
 @custom-variant phx-submit-loading (.phx-submit-loading&, .phx-submit-loading &);
 @custom-variant phx-change-loading (.phx-change-loading&, .phx-change-loading &);
 
-/* Use the data attribute for dark mode  */
+
+/*
+ * Use Phoenix's data-theme attribute for dark-mode Tailwind variants.
+ */
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 
-/* Make LiveView wrapper divs transparent for layout */
-[data-phx-session], [data-phx-teleported-src] { display: contents }
 
-/* This file is for your main application CSS */
+/*
+ * LiveView creates wrapper elements for sessions and teleported content.
+ * They must not interfere with application layout.
+ */
+[data-phx-session],
+[data-phx-teleported-src] {
+  display: contents;
+}

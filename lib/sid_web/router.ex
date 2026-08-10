@@ -17,7 +17,8 @@ defmodule SidWeb.Router do
   scope "/", SidWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
+    live "/", OrderPlanLive.Index, :index
+    live "/plans/:id", OrderPlanLive.Show, :show
   end
 
   # Other scopes may use custom stacks.

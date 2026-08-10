@@ -1,0 +1,139 @@
+<Layouts.app flash={@flash}>
+  <div class="mx-auto max-w-6xl space-y-10 px-4 py-8 sm:px-6 lg:px-8">
+    <section class="space-y-6">
+      <div>
+        <img
+          src={~p"/images/sid-logo-text.png"}
+          alt="SID — Selection & Inventory Discovery"
+          class="h-auto w-full max-w-2xl"
+        />
+      </div>
+
+      <div class="space-y-2">
+        <h1 class="text-3xl font-bold tracking-tight text-base-content">
+          Acquisition Planning
+        </h1>
+
+        <p class="max-w-3xl text-sm leading-6 text-base-content/70">
+          Create acquisition plans, define budgets, and organize concrete order lists.
+        </p>
+      </div>
+    </section>
+
+    <section class="grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
+      <div class="space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-xl font-semibold text-base-content">
+              Order plans
+            </h2>
+
+            <p class="text-sm text-base-content/60">
+              Higher-level acquisition plans and their available budgets.
+            </p>
+          </div>
+        </div>
+
+        <div
+          :if={@order_plans == []}
+          class="rounded-box border border-dashed border-base-300 bg-base-100 p-8 text-center"
+        >
+          <p class="font-medium text-base-content">
+            No order plans yet.
+          </p>
+
+          <p class="mt-1 text-sm text-base-content/60">
+            Create the first plan using the form on this page.
+          </p>
+        </div>
+
+        <div :if={@order_plans != []} class="grid gap-4">
+          <article
+            :for={plan <- @order_plans}
+            id={"order-plan-#{plan.id}"}
+            class="rounded-box border border-base-300 bg-base-100 p-5 shadow-sm"
+          >
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <h3 class="text-lg font-semibold text-base-content">
+                  <.link
+                    navigate={~p"/plans/#{plan.id}"}
+                    class="transition-colors hover:text-primary hover:underline"
+                  >
+                    {plan.name}
+                  </.link>
+                </h3>
+
+                <p class="mt-1 text-sm text-base-content/60">
+                  Base currency: {plan.base_currency}
+                </p>
+              </div>
+
+              <div class="text-left sm:text-right">
+                <p class="text-xs font-medium uppercase tracking-wide text-base-content/60">
+                  Budget
+                </p>
+
+                <p class="mt-1 text-lg font-semibold text-base-content">
+                  <%= if plan.budget do %>
+                    {format_money(plan.budget, plan.base_currency)}
+                  <% else %>
+                    Not defined
+                  <% end %>
+                </p>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+
+      <aside class="rounded-box border border-base-300 bg-base-200 p-6">
+        <h2 class="text-lg font-semibold text-base-content">
+          New order plan
+        </h2>
+
+        <p class="mt-1 text-sm leading-6 text-base-content/60">
+          A budget may be left undefined and added later.
+        </p>
+
+        <.form
+          for={@form}
+          id="order-plan-form"
+          phx-change="validate"
+          phx-submit="save"
+          class="mt-6 space-y-5"
+        >
+          <.input
+            field={@form[:name]}
+            type="text"
+            label="Name"
+            placeholder="Myanmar Annual Order 2026"
+            autocomplete="off"
+          />
+
+          <.input
+            field={@form[:budget]}
+            type="number"
+            label="Budget"
+            step="0.01"
+            min="0"
+            placeholder="900.00"
+          />
+
+          <.input
+            field={@form[:base_currency]}
+            type="text"
+            label="Base currency"
+            maxlength="3"
+            placeholder="EUR"
+            autocomplete="off"
+          />
+
+          <.button class="btn btn-primary w-full">
+            Create order plan
+          </.button>
+        </.form>
+      </aside>
+    </section>
+  </div>
+</Layouts.app>
