@@ -299,6 +299,21 @@ A provider is responsible for:
 
 The provider is not responsible for acquisition decisions.
 
+## Implemented Catalogue Abstraction
+
+The initial catalogue abstraction is now implemented.
+
+SID application code interacts with the catalogue through:
+
+```text
+Sid.Catalog
+    |
+    v
+Sid.Catalog.Adapter
+    |
+    +-- Sid.Catalog.Adapters.Fake
+    +-- future catalogue adapters
+
 
 # 11. Catalogue Provider Behaviour
 

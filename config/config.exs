@@ -9,7 +9,8 @@ import Config
 
 config :sid,
   ecto_repos: [Sid.Repo],
-  generators: [timestamp_type: :utc_datetime]
+  generators: [timestamp_type: :utc_datetime],
+  catalog_adapter: Sid.Catalog.Adapters.Fake
 
 # Configure the endpoint
 config :sid, SidWeb.Endpoint,
