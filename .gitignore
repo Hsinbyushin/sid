@@ -39,3 +39,7 @@ npm-debug.log
 .env
 .env.*
 !.env.example
+
+# Local vendor samples may contain copyrighted or operational source material
+# and must never be committed to the repository.
+/tmp/import_samples/

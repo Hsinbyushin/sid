@@ -520,3 +520,88 @@ Before a major feature is considered complete, it should be reviewed against:
 - extension safety.
 
 A feature is not complete merely because its happy path works.
+
+## 34. Import and Source Data Rules
+
+### Deterministic-First Parsing
+
+SID MUST prefer deterministic parsing methods whenever the source format allows
+reliable extraction.
+
+Structured formats such as CSV or Excel SHOULD be parsed directly from their
+structured data. Semi-structured documents SHOULD first be processed using
+deterministic parsers, layout information, and explicit extraction rules.
+
+OCR MAY be used when a document does not provide a reliable machine-readable
+text layer.
+
+LLM-based extraction MUST NOT be the default import mechanism. It MAY be used
+as a fallback for genuinely ambiguous or otherwise unresolvable input.
+
+The use of an LLM MUST NOT silently replace deterministic extraction that can
+produce the same result reliably.
+
+
+### Source Preservation
+
+SID MUST preserve imported source data.
+
+Parsed, normalized, enriched, or otherwise derived values MUST NOT overwrite
+the original source representation.
+
+Where SID derives structured information from source data, the relationship
+between the source and the derived information SHOULD remain traceable.
+
+This principle applies to bibliographic data, vendor data, descriptive text,
+identifiers, prices, and multilingual text.
+
+
+### Description Preservation
+
+Descriptive content supplied by vendors is considered relevant acquisition
+data and MUST be preserved when present.
+
+Book descriptions, annotations, summaries, subject descriptions, and similar
+content MUST NOT be discarded merely because they are not part of the core
+bibliographic record.
+
+Descriptive content SHOULD remain distinguishable from bibliographic fields
+such as title, contributor, publisher, edition, or identifier.
+
+Normalized or derived versions MAY be created for search or matching purposes,
+but MUST NOT replace the original description.
+
+
+### Offer and Bibliographic Data Separation
+
+SID MUST distinguish between vendor-specific offers and bibliographic
+descriptions of publications.
+
+Vendor-specific information such as price, currency, vendor identifier,
+vendor URL, and other commercial data MUST NOT be treated as intrinsic
+bibliographic properties of a publication.
+
+Bibliographic information such as title, contributors, publisher,
+publication date, identifiers, edition, and language MUST remain conceptually
+separable from the vendor offer through which the publication was discovered.
+
+The concrete database model implementing this separation MAY evolve as real
+source material is analyzed.
+
+
+### Provenance
+
+Derived data SHOULD retain sufficient provenance to determine where it came
+from and how it was produced.
+
+Where practical, SID SHOULD be able to distinguish between:
+
+- data supplied directly by a vendor;
+- data extracted deterministically from a source document;
+- normalized or transformed data;
+- data obtained from an external catalogue;
+- data inferred by probabilistic or LLM-based processing;
+- data entered or corrected manually.
+
+Probabilistically inferred data MUST NOT be presented as if it were directly
+supplied by the original source.
