@@ -24,6 +24,7 @@ defmodule Sid.Imports.Parsers.MaryMartin do
   }
 
   alias Sid.Imports.Extractors.Docx.Paragraph
+  alias Sid.Imports.MaryMartin.Signals
 
   @impl true
   @spec parse(SourceRecord.t()) ::
@@ -199,8 +200,8 @@ defmodule Sid.Imports.Parsers.MaryMartin do
         %{state | vendor_url: extract_mary_martin_url(text)}
 
       is_nil(state.price_amount) and
-          match?({:ok, _}, parse_price(text)) ->
-        {:ok, price} = parse_price(text)
+          match?({:ok, _}, Signals.parse_price(text)) ->
+        {:ok, price} = Signals.parse_price(text)
 
         %{
           state
@@ -218,11 +219,14 @@ defmodule Sid.Imports.Parsers.MaryMartin do
             commercial_seen: true
         }
 
-      identifier?(text) ->
+      match?({:ok, _}, Signals.identifier_candidate(text)) ->
+        {:ok, candidate} =
+          Signals.identifier_candidate(text)
+
         identifier =
           %Identifier{
-            scheme: :isbn,
-            value: text,
+            scheme: candidate.scheme,
+            value: candidate.value,
             validation_status: :unchecked
           }
 
@@ -236,7 +240,7 @@ defmodule Sid.Imports.Parsers.MaryMartin do
         %{state | publication_statement: text}
 
       is_nil(state.physical_description) and
-          physical_description?(text) ->
+          Signals.physical_description?(text) ->
         %{state | physical_description: text}
 
       is_nil(state.publication_statement) and
@@ -244,7 +248,7 @@ defmodule Sid.Imports.Parsers.MaryMartin do
         %{state | publication_statement: text}
 
       is_nil(state.physical_description) and
-          physical_description?(text) ->
+          Signals.physical_description?(text) ->
         %{state | physical_description: text}
 
       category_candidate?(text, index, state) ->
@@ -311,7 +315,7 @@ defmodule Sid.Imports.Parsers.MaryMartin do
   end
 
   defp price_line?(text) do
-    match?({:ok, _}, parse_price(text))
+    match?({:ok, _}, Signals.parse_price(text))
   end
 
   defp lines_from_paragraph(%Paragraph{} = paragraph) do
@@ -339,56 +343,17 @@ defmodule Sid.Imports.Parsers.MaryMartin do
   end
 
   defp publication_statement?(%{text: text}) do
-    Regex.match?(
-      ~r/:\s*.+(?:19|20)\d{2}\s*$/u,
-      text
-    )
+    Signals.publication_statement?(text)
   end
 
   defp price?(%{text: text}) do
-    match?({:ok, _}, parse_price(text))
-  end
-
-  defp parse_price(text) do
-    regex =
-      ~r/^\s*(?<currency>USD|BND|\$)\s*:?\s*(?<amount>\d+(?:[.,]\d+)?)\s*(?:\((?<qualifier>[^)]+)\))?\s*\/\s*(?<binding>[[:alnum:]-]+)\s*$/u
-
-    case Regex.named_captures(regex, text) do
-      nil ->
-        :error
-
-      captures ->
-        amount =
-          captures["amount"]
-          |> String.replace(",", ".")
-          |> Decimal.new()
-          |> Decimal.round(2)
-
-        {:ok,
-         %{
-           amount: amount,
-           currency: captures["currency"],
-           qualifier: blank_to_nil(captures["qualifier"]),
-           binding: captures["binding"]
-         }}
-    end
+    Signals.price?(text)
   end
 
   defp identifier?(text) do
-    compact =
-      text
-      |> String.replace(~r/[\s-]/u, "")
-
-    Regex.match?(
-      ~r/^\d{9}[\dXx]$|^\d{11,13}$|^\d{13}$/u,
-      compact
-    )
-  end
-
-  defp physical_description?(text) do
-    Regex.match?(
-      ~r/(?:\d+\s*p\.?|[ivxlcdm]+\s*[,+.]\s*\d+\s*p\.?|\d+\s*v\.)(?:\s*;\s*[\d.,x]+\s*cm\.?)?/iu,
-      text
+    match?(
+      {:ok, _},
+      Signals.identifier_candidate(text)
     )
   end
 
@@ -400,26 +365,17 @@ defmodule Sid.Imports.Parsers.MaryMartin do
   end
 
   defp weight?(text) do
-    Regex.match?(
-      ~r/^\s*\d+(?:[.,]\d+)?\s*(?:gm\.?|kg\.?)\s*$/iu,
-      text
-    )
+    Signals.weight?(text)
   end
 
   defp mary_martin_url?(text) do
-    Regex.match?(
-      ~r{https?://(?:www\.)?marymartin\.com/web\?pid=\d+}iu,
-      text
-    )
+    Signals.vendor_url?(text)
   end
 
   defp extract_mary_martin_url(text) do
-    case Regex.run(
-           ~r{https?://(?:www\.)?marymartin\.com/web\?pid=\d+}iu,
-           text
-         ) do
-      [url] -> url
-      _ -> nil
+    case Signals.vendor_url(text) do
+      {:ok, url} -> url
+      :error -> nil
     end
   end
 
@@ -503,8 +459,4 @@ defmodule Sid.Imports.Parsers.MaryMartin do
         {title, responsibility}
     end
   end
-
-  defp blank_to_nil(nil), do: nil
-  defp blank_to_nil(""), do: nil
-  defp blank_to_nil(value), do: value
 end

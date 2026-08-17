@@ -69,109 +69,214 @@ defmodule Sid.MaryMartinImportPreview do
     end)
 
     if length(offers) > @preview_count do
-      IO.puts(
-        "... #{length(offers) - @preview_count} additional offer(s) not shown."
-      )
+      IO.puts("... #{length(offers) - @preview_count} additional offer(s) not shown.")
     end
 
     print_quality_summary(offers)
+    print_diagnostics(offers, paragraphs)
     print_failures(failures)
   end
 
   defp print_quality_summary(offers) do
-  total = length(offers)
+    total = length(offers)
 
-  with_category =
-    Enum.count(offers, &present?(&1.vendor_category))
+    with_category =
+      Enum.count(offers, &present?(&1.vendor_category))
 
-  with_identifiers =
-    Enum.count(offers, &(&1.identifiers != []))
+    with_identifiers =
+      Enum.count(offers, &(&1.identifiers != []))
 
-  identifier_statuses =
-    offers
-    |> Enum.flat_map(& &1.identifiers)
-    |> Enum.frequencies_by(& &1.validation_status)
+    identifier_statuses =
+      offers
+      |> Enum.flat_map(& &1.identifiers)
+      |> Enum.frequencies_by(& &1.validation_status)
 
-  with_price =
-    Enum.count(offers, &(not is_nil(&1.price_amount)))
+    with_price =
+      Enum.count(offers, &(not is_nil(&1.price_amount)))
 
-  with_descriptions =
-    Enum.count(offers, &(&1.descriptions != []))
+    with_descriptions =
+      Enum.count(offers, &(&1.descriptions != []))
 
-  offers_with_unparsed =
-    Enum.count(offers, &(&1.unparsed != []))
+    offers_with_unparsed =
+      Enum.count(offers, &(&1.unparsed != []))
 
-  unparsed_values =
-    offers
-    |> Enum.flat_map(& &1.unparsed)
+    unparsed_values =
+      offers
+      |> Enum.flat_map(& &1.unparsed)
 
-  IO.puts("")
-  IO.puts("=== Import Quality Summary ===")
-  IO.puts("")
+    IO.puts("")
+    IO.puts("=== Import Quality Summary ===")
+    IO.puts("")
 
-  print_metric("Offers", total)
+    print_metric("Offers", total)
 
-  IO.puts("")
+    IO.puts("")
 
-  print_metric("With category", with_category)
-  print_metric("Without category", total - with_category)
+    print_metric("With category", with_category)
+    print_metric("Without category", total - with_category)
 
-  IO.puts("")
+    IO.puts("")
 
-  print_metric("With identifiers", with_identifiers)
-  print_metric("Without identifiers", total - with_identifiers)
+    print_metric("With identifiers", with_identifiers)
+    print_metric("Without identifiers", total - with_identifiers)
 
-  identifier_statuses
-  |> Enum.sort_by(fn {status, _count} -> status end)
-  |> Enum.each(fn {status, count} ->
-    print_metric("Identifiers #{status}", count)
-  end)
+    identifier_statuses
+    |> Enum.sort_by(fn {status, _count} -> status end)
+    |> Enum.each(fn {status, count} ->
+      print_metric("Identifiers #{status}", count)
+    end)
 
-  IO.puts("")
+    IO.puts("")
 
-  print_metric("With price", with_price)
-  print_metric("Without price", total - with_price)
+    print_metric("With price", with_price)
+    print_metric("Without price", total - with_price)
 
-  IO.puts("")
+    IO.puts("")
 
-  print_metric("With descriptions", with_descriptions)
-  print_metric("Without descriptions", total - with_descriptions)
+    print_metric("With descriptions", with_descriptions)
+    print_metric("Without descriptions", total - with_descriptions)
 
-  IO.puts("")
+    IO.puts("")
 
-  print_metric("With unparsed data", offers_with_unparsed)
-  print_metric("Cleanly parsed", total - offers_with_unparsed)
-  print_metric("Unparsed statements", length(unparsed_values))
+    print_metric("With unparsed data", offers_with_unparsed)
+    print_metric("Cleanly parsed", total - offers_with_unparsed)
+    print_metric("Unparsed statements", length(unparsed_values))
 
-  print_common_unparsed(unparsed_values)
-end
+    print_common_unparsed(unparsed_values)
+  end
 
-defp print_common_unparsed([]), do: :ok
+  defp print_diagnostics(offers, paragraphs) do
+    print_offer_group(
+      "Offers With Unparsed Data",
+      Enum.filter(offers, &(&1.unparsed != []))
+    )
 
-defp print_common_unparsed(values) do
-  IO.puts("")
-  IO.puts("Most common unparsed values:")
+    offers_without_identifiers =
+      Enum.filter(offers, &(&1.identifiers == []))
 
-  values
-  |> Enum.frequencies()
-  |> Enum.sort_by(fn {value, count} ->
-    {-count, value}
-  end)
-  |> Enum.take(10)
-  |> Enum.each(fn {value, count} ->
-    IO.puts("  #{count} × #{preview_text(value)}")
-  end)
-end
+    print_offer_group(
+      "Offers Without Identifiers",
+      offers_without_identifiers
+    )
 
-defp print_metric(label, value) do
-  IO.puts("#{String.pad_trailing(label <> ":", 24)} #{value}")
-end
+    invalid_identifier_offers =
+      Enum.filter(offers, fn offer ->
+        Enum.any?(
+          offer.identifiers,
+          &(&1.validation_status == :invalid)
+        )
+      end)
 
-defp present?(value) when is_binary(value) do
-  String.trim(value) != ""
-end
+    print_offer_group(
+      "Offers With Invalid Identifiers",
+      invalid_identifier_offers
+    )
 
-defp present?(_value), do: false
+    print_raw_sources(offers_without_identifiers, paragraphs)
+  end
+
+  defp print_raw_sources([], _paragraphs), do: :ok
+
+  defp print_raw_sources(offers, paragraphs) do
+    paragraphs_by_index =
+      Map.new(paragraphs, fn paragraph ->
+        {paragraph.index, paragraph}
+      end)
+
+    IO.puts("")
+    IO.puts("=== Raw Source For Offers Without Identifiers ===")
+    IO.puts("")
+
+    Enum.each(offers, fn offer ->
+      start_index = offer.source.locator[:paragraph_start]
+      end_index = offer.source.locator[:paragraph_end]
+
+      IO.puts("--- paragraphs #{start_index}-#{end_index} ---")
+
+      Enum.each(start_index..end_index, fn index ->
+        case Map.get(paragraphs_by_index, index) do
+          nil ->
+            IO.puts("#{index}: <missing>")
+
+          paragraph ->
+            IO.puts("#{index}: #{raw_paragraph_text(paragraph.text)}")
+        end
+      end)
+
+      IO.puts("")
+    end)
+  end
+
+  defp raw_paragraph_text(text) when is_binary(text) do
+    text
+    |> String.replace("\r\n", "\n")
+    |> String.replace("\r", "\n")
+    |> String.replace("\n", " ⏎ ")
+  end
+
+  defp raw_paragraph_text(nil), do: "∅"
+
+  defp print_offer_group(_label, []), do: :ok
+
+  defp print_offer_group(label, offers) do
+    IO.puts("")
+    IO.puts("=== #{label} ===")
+    IO.puts("Count: #{length(offers)}")
+    IO.puts("")
+
+    Enum.each(offers, &print_diagnostic_offer/1)
+  end
+
+  defp print_diagnostic_offer(offer) do
+    IO.puts("--- #{format_locator(offer.source.locator)} ---")
+    IO.puts("Title: #{diagnostic_title(offer)}")
+    IO.puts("Category: #{display(offer.vendor_category)}")
+    IO.puts("Identifiers: #{format_identifiers(offer.identifiers)}")
+    IO.puts("Unparsed: #{format_list(offer.unparsed)}")
+    IO.puts("")
+  end
+
+  defp diagnostic_title(%{titles: []}), do: "—"
+
+  defp diagnostic_title(%{titles: titles}) do
+    case Enum.find(titles, &(&1.role == :primary_title)) do
+      nil ->
+        titles
+        |> List.first()
+        |> Map.get(:text)
+        |> display()
+
+      title ->
+        display(title.text)
+    end
+  end
+
+  defp print_common_unparsed([]), do: :ok
+
+  defp print_common_unparsed(values) do
+    IO.puts("")
+    IO.puts("Most common unparsed values:")
+
+    values
+    |> Enum.frequencies()
+    |> Enum.sort_by(fn {value, count} ->
+      {-count, value}
+    end)
+    |> Enum.take(10)
+    |> Enum.each(fn {value, count} ->
+      IO.puts("  #{count} × #{preview_text(value)}")
+    end)
+  end
+
+  defp print_metric(label, value) do
+    IO.puts("#{String.pad_trailing(label <> ":", 24)} #{value}")
+  end
+
+  defp present?(value) when is_binary(value) do
+    String.trim(value) != ""
+  end
+
+  defp present?(_value), do: false
 
   defp print_offer(offer, index) do
     IO.puts("--- Offer #{index} ---")
