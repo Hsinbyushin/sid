@@ -10,6 +10,7 @@ defmodule Sid.Catalog.Adapters.Fake do
   functionality to be developed and tested independently of a particular
   library system or external API.
   """
+  alias Sid.Catalog.Record
 
   @behaviour Sid.Catalog.Adapter
 
@@ -26,8 +27,7 @@ defmodule Sid.Catalog.Adapters.Fake do
         searchable_text =
           [
             record.title,
-            record.author,
-            record.publisher,
+            record.creator,
             record.isbn
           ]
           |> Enum.reject(&is_nil/1)
@@ -45,7 +45,7 @@ defmodule Sid.Catalog.Adapters.Fake do
     normalized_identifier = String.trim(identifier)
 
     case Enum.find(records(), fn record ->
-           record.id == normalized_identifier or
+           record.record_id == normalized_identifier or
              record.isbn == normalized_identifier
          end) do
       nil ->
@@ -58,25 +58,25 @@ defmodule Sid.Catalog.Adapters.Fake do
 
   defp records do
     [
-      %{
-        id: "fake-1",
+      %Record{
+        source: "fake",
+        record_id: "fake-1",
         title: "မြန်မာ့သမိုင်း",
-        author: "Example Author",
-        publisher: "Example Press",
+        creator: "Example Author",
         isbn: "9780000000001"
       },
-      %{
-        id: "fake-2",
+      %Record{
+        source: "fake",
+        record_id: "fake-2",
         title: "中國歷史",
-        author: "Example Author",
-        publisher: "Example University Press",
+        creator: "Example Author",
         isbn: "9780000000002"
       },
-      %{
-        id: "fake-3",
+      %Record{
+        source: "fake",
+        record_id: "fake-3",
         title: "Pāṇini and the Sanskrit Grammatical Tradition",
-        author: "Example Scholar",
-        publisher: "Example Academic Press",
+        creator: "Example Scholar",
         isbn: "9780000000003"
       }
     ]

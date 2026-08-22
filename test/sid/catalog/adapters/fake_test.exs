@@ -19,7 +19,11 @@ defmodule Sid.Catalog.Adapters.FakeTest do
     test "can search by ISBN" do
       assert {:ok, results} = Fake.search("9780000000002")
 
-      assert [%{id: "fake-2"}] = results
+      assert [
+               %Sid.Catalog.Record{
+                 record_id: "fake-2"
+               }
+             ] = results
     end
   end
 
@@ -27,7 +31,7 @@ defmodule Sid.Catalog.Adapters.FakeTest do
     test "ignores surrounding whitespace" do
       assert {:ok, record} = Fake.lookup("  fake-2  ")
 
-      assert record.id == "fake-2"
+      assert record.record_id == "fake-2"
     end
   end
 end

@@ -51,6 +51,6 @@ defmodule Sid.Catalog.Adapter do
               | {:error, reason()}
 
   @callback lookup(record_id()) ::
-              {:ok, Record.t()}
+              {:ok, Record.t() | nil}
               | {:error, reason()}
 end
